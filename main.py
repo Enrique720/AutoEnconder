@@ -61,7 +61,7 @@ class Autoncoder(nn.Module):
     out =  self.Decoder(z)
     return out
 
-  def train(model, train_loader, Epochs, loss_fn):
+  def train(self,model, train_loader, Epochs, loss_fn):
     train_loss_avg = []
     for epoch in range(Epochs):
       train_loss_avg.append(0)
@@ -87,15 +87,15 @@ class Autoncoder(nn.Module):
     return train_loss_avg
     
 
-  learning_rate = 0.001
-  autoencoder = Autoncoder()
-  autoencoder.to(device)
-  loss = nn.MSELoss()
-  optimizer = torch.optim.Adam(params=autoencoder.parameters(), lr=learning_rate, weight_decay=1e-5)
-  autoencoder.train()
-  loss_values = train(autoencoder, train_loader,20, loss)
+learning_rate = 0.001
+autoencoder = Autoncoder()
+autoencoder.to(device)
+loss = nn.MSELoss()
+optimizer = torch.optim.Adam(params=autoencoder.parameters(), lr=learning_rate, weight_decay=1e-5)
+#autoencoder.train()
+loss_values = autoencoder.train(autoencoder, train_loader,20, loss)
   
-  fig = plt.figure()
+fig = plt.figure()
 plt.plot(loss_values)
 plt.xlabel('Epochs')
 plt.ylabel('Reconstruction error')
@@ -105,7 +105,7 @@ def Show(out, title = ''):
   print(title)
   out = out.permute(1,0,2,3)
   grilla = torchvision.utils.make_grid(out,10,5)
-  plt.imshow(transforms.ToPILImage()(grilla), 'jet')
+  plt.imshow(transform.ToPILImage()(grilla), 'jet')
   plt.show()
 
 def Show_Weight(out):
@@ -114,7 +114,7 @@ def Show_Weight(out):
   plt.show()
 
 with torch.no_grad():
-  print("entro")
+  print("irrumpo")
   iterator = iter(test_loader)
   image1,label = iterator.next()
   
@@ -143,12 +143,22 @@ image = image.view(image.size(0),-1)
 
 salida = autoencoder(image)
 salida = salida.view(salida.size(0),1,28,28)
-  
 
-z = autoencoder.encoder(image)
-print(z.shape)
-
-'''print("imagen reconstruida")
+print("imagen reconstruida")
 fig, ax = plt.subplots(figsize=(10, 10))
 Show_Weight(salida[1:10])
-plt.show()'''
+plt.show()
+
+
+
+
+z = autoencoder.encoder(image)
+deviation,mean = torch.std_mean(z,axis=0)
+new_z = (torch.randn(5,7).to(device)*deviation + mean).to(device)
+
+print(new_z.shape)
+new_image = autoencoder.Decoder(new_z)
+new_image = new_image.view(5,1,28,28)
+fig, ax = plt.subplots(figsize=(5, 5))
+Show_Weight(new_image[1:5])
+plt.show()
